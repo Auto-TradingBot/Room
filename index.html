@@ -1,0 +1,210 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blockchain Auto-Trading Room</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #0d1117; color: #c9d1d9; margin: 0; padding: 0; }
+    header { background-color: #0a84ff; color: white; padding: 15px 20px; display: flex; align-items: center; gap: 15px; }
+    header h1 { margin: 0; font-size: 20px; }
+    .container { max-width: 800px; margin: 20px auto; background-color: #161b22; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(255,255,255,0.1); }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; }
+    input, select { width: 100%; padding: 10px; border: 1px solid #30363d; border-radius: 5px; background: #0d1117; color: #c9d1d9; }
+    .btn, .nav-btn { background-color: #238636; color: white; padding: 10px; border: none; width: 100%; border-radius: 5px; font-size: 16px; cursor: pointer; margin-bottom: 10px; }
+    .hidden { display: none; }
+    .chat-box { max-height: 400px; overflow-y: auto; margin-bottom: 20px; background: #0d1117; padding: 10px; border: 1px solid #30363d; border-radius: 5px; }
+    .message { margin-bottom: 15px; }
+    .message.admin { background-color: #23863630; border-left: 4px solid #238636; padding: 10px; border-radius: 5px; }
+    .media-gallery { display: flex; flex-wrap: wrap; gap: 20px; }
+    .media-card { background: #21262d; padding: 10px; border-radius: 8px; width: calc(50% - 10px); }
+    .media-card img, .media-card video { width: 100%; border-radius: 5px; }
+    .media-card h4 { margin: 5px 0; font-size: 16px; }
+    .media-card p { font-size: 14px; color: #8b949e; }
+    footer { text-align: center; padding: 20px; background: #161b22; color: #8b949e; margin-top: 30px; font-size: 14px; }
+    .action-section button { margin-top: 10px; width: 100%; }
+    .back-btn { font-size: 24px; color: #0a84ff; background: none; border: none; cursor: pointer; }
+  </style>
+</head>
+<body>
+<header>
+  <button class="back-btn" onclick="goBack()">&lt;</button>
+  <h1>Blockchain Auto-Trading Room</h1>
+</header><div class="container" id="navigationPage">
+  <button class="nav-btn" onclick="showRegisterPage()">Join Live Trading Room</button>
+  <button class="nav-btn" onclick="showLoginPage()">Login to Live Trading Account</button>
+</div><div class="container hidden" id="registerPage">
+  <h2>Register</h2>
+  <div id="regError" style="color:red;"></div>
+  <div class="form-group"><label>Full Name</label><input id="regFullName" type="text"></div>
+  <div class="form-group"><label>Username</label><input id="regUsername" type="text"></div>
+  <div class="form-group"><label>Email</label><input id="regEmail" type="email"></div>
+  <div class="form-group"><label>Country</label><input id="country" type="text" readonly></div>
+  <div class="form-group"><label>Password</label><input id="regPassword" type="password"></div>
+  <div class="form-group"><label>Confirm Password</label><input id="regConfirmPassword" type="password"></div>
+  <button class="btn" onclick="registerUser()">Register</button>
+</div><div class="container hidden" id="loginPage">
+  <h2>Login</h2>
+  <div id="loginError" style="color:red;"></div>
+  <div class="form-group"><label>Email or Phone</label><input id="loginIdentifier" type="text"></div>
+  <div class="form-group"><label>Password</label><input id="loginPassword" type="password"></div>
+  <button class="btn" onclick="loginUser()">Login</button>
+</div><div class="container hidden" id="tradingRoom">
+  <div id="adminProfile" class="hidden">
+    <h3>Admin Panel</h3>
+    <div class="form-group"><label>Name</label><input type="text" id="uploadName"></div>
+    <div class="form-group"><label>Caption</label><input type="text" id="uploadCaption"></div>
+    <div class="form-group"><label>File</label><input type="file" id="uploadFile"></div>
+    <div class="form-group"><button class="btn" onclick="uploadMedia()">Upload Media</button></div>
+    <div class="form-group"><button class="btn" onclick="authorizeUserUpload(true)">Authorize User Upload</button></div>
+    <div class="form-group"><button class="btn" onclick="authorizeUserUpload(false)">Disable User Upload</button></div>
+    <div class="form-group"><label>Wallet Address</label><input type="text" id="walletInput"></div>
+    <div class="form-group"><button class="btn" onclick="fetchWalletBalance('walletInput', 'balanceResult')">Check Wallet Balance</button></div>
+    <div id="balanceResult"></div>
+    <div id="uploadStatus" style="color:#4ade80;"></div>
+  </div>  <div id="userProfile" class="hidden">
+    <h3>User Panel</h3>
+    <div class="form-group"><label>Name</label><input type="text" id="userUploadName"></div>
+    <div class="form-group"><label>Caption</label><input type="text" id="userUploadCaption"></div>
+    <div class="form-group"><label>File</label><input type="file" id="userUploadFile"></div>
+    <div class="form-group"><button class="btn hidden" id="userUploadBtn" onclick="uploadUserMedia()">Upload</button></div>
+    <div class="form-group"><label>Wallet Address</label><input type="text" id="walletInputUser"></div>
+    <div class="form-group"><button class="btn" onclick="fetchWalletBalance('walletInputUser', 'userBalanceResult')">Check Wallet Balance</button></div>
+    <div id="userBalanceResult"></div>
+    <div id="userUploadStatus" style="color:#4ade80;"></div>
+  </div>  <div class="chat-box">
+    <div class="message admin">
+      <strong>Admin:</strong> Welcome to the Trading Room 🚀 Choose a crypto asset below to view live charts.
+    </div>
+    <div class="form-group">
+      <button class="btn" onclick="openAssetChart('bitcoin')">Bitcoin</button>
+      <button class="btn" onclick="openAssetChart('ethereum')">Ethereum</button>
+      <button class="btn" onclick="openAssetChart('binancecoin')">BNB</button>
+    </div>
+    <iframe class="chart" id="priceChart" src="https://www.coingecko.com/en/coins/bitcoin" width="100%" height="400"></iframe>
+  </div>  <div class="media-gallery" id="successGallery"></div>
+</div><footer>
+  Blockchain Auto-Trading Room | Built with Blockchain
+</footer><script>
+  let currentPage = localStorage.getItem('currentPage') || 'navigationPage';
+  document.getElementById(currentPage).classList.remove('hidden');
+  const pageStack = [currentPage];
+
+  function showPage(id) {
+    document.querySelectorAll('.container').forEach(p => p.classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+    pageStack.push(id);
+    localStorage.setItem('currentPage', id);
+  }
+
+  function goBack() {
+    pageStack.pop();
+    const prev = pageStack[pageStack.length - 1] || 'navigationPage';
+    showPage(prev);
+  }
+
+  function showRegisterPage() { showPage('registerPage'); }
+  function showLoginPage() { showPage('loginPage'); }
+
+  const authorizedUpload = { status: false };
+
+  function authorizeUserUpload(status) {
+    authorizedUpload.status = status;
+    const btn = document.getElementById('userUploadBtn');
+    if (status) btn.classList.remove('hidden');
+    else btn.classList.add('hidden');
+  }
+
+  function registerUser() {
+    const email = document.getElementById('regEmail').value;
+    const password = document.getElementById('regPassword').value;
+    const confirm = document.getElementById('regConfirmPassword').value;
+    if (!email || password !== confirm) {
+      document.getElementById('regError').innerText = "Passwords do not match or fields missing";
+      return;
+    }
+    localStorage.setItem('userEmail', email);
+    localStorage.setItem('userPass', password);
+    showPage('loginPage');
+  }
+
+  function loginUser() {
+    const id = document.getElementById('loginIdentifier').value;
+    const pass = document.getElementById('loginPassword').value;
+
+    if (id === '+1(209) 663-5424' && pass === 'Adminauto1234@') {
+      showPage('tradingRoom');
+      document.getElementById('adminProfile').classList.remove('hidden');
+      document.getElementById('userProfile').classList.add('hidden');
+    } else if ((id === localStorage.getItem('userEmail') || id === localStorage.getItem('userPhone')) && pass === localStorage.getItem('userPass')) {
+      showPage('tradingRoom');
+      document.getElementById('userProfile').classList.remove('hidden');
+      document.getElementById('adminProfile').classList.add('hidden');
+    } else {
+      document.getElementById('loginError').innerText = "Invalid credentials";
+    }
+  }
+
+  function openAssetChart(assetId) {
+    document.getElementById('priceChart').src = `https://www.coingecko.com/en/coins/${assetId}`;
+  }
+
+  function fetchWalletBalance(inputId, outputId) {
+    const addr = document.getElementById(inputId).value;
+    if (!addr) return alert("Enter wallet address");
+    document.getElementById(outputId).innerText = "Fetching...";
+    fetch(`https://api.bscscan.com/api?module=account&action=balance&address=${addr}&tag=latest&apikey=YourPublicBscApiKey`)
+      .then(r => r.json()).then(data => {
+        const bnb = parseFloat(data.result) / 1e18;
+        document.getElementById(outputId).innerText = `BNB Balance: ${bnb.toFixed(4)}`;
+      }).catch(() => document.getElementById(outputId).innerText = "Error fetching balance");
+  }
+
+  function uploadMedia() {
+    const name = document.getElementById('uploadName').value;
+    const caption = document.getElementById('uploadCaption').value;
+    const file = document.getElementById('uploadFile').files[0];
+    if (!file) return;
+    addToGallery(URL.createObjectURL(file), caption, name, file.type);
+    document.getElementById('uploadStatus').innerText = 'Uploaded successfully';
+  }
+
+  function uploadUserMedia() {
+    const name = document.getElementById('userUploadName').value;
+    const caption = document.getElementById('userUploadCaption').value;
+    const file = document.getElementById('userUploadFile').files[0];
+    if (!authorizedUpload.status || !file) return alert("Upload not authorized or file missing");
+    addToGallery(URL.createObjectURL(file), caption, name, file.type);
+    document.getElementById('userUploadStatus').innerText = 'Uploaded successfully';
+  }
+
+  function addToGallery(src, caption, name, type) {
+    const card = document.createElement('div');
+    card.className = 'media-card';
+    card.innerHTML = `
+      <${type.startsWith('video') ? 'video controls' : 'img'} src="${src}"></${type.startsWith('video') ? 'video' : 'img'}>
+      <h4>${name}</h4>
+      <p>${caption}</p>
+    `;
+    document.getElementById('successGallery').prepend(card);
+  }
+
+  const autoNames = ["Alice", "Mark", "Liu", "Carlos", "Anna", "Fatima", "Igor", "Sara", "Ayo", "Chen"];
+  const captions = ["Withdrew $2,000", "Profit $800 in 1 week", "Trading automated success", "Earned while sleeping", "Fast withdrawal proof"];
+  const images = ["https://via.placeholder.com/300x200.png?text=Proof", "https://via.placeholder.com/300x200.png?text=Withdraw", "https://via.placeholder.com/300x200.png?text=AutoTrade"];
+
+  function autoAddMedia() {
+    const name = autoNames[Math.floor(Math.random() * autoNames.length)] + Math.floor(Math.random()*100);
+    const caption = captions[Math.floor(Math.random() * captions.length)];
+    const image = images[Math.floor(Math.random() * images.length)];
+    addToGallery(image, caption, name, 'image/png');
+  }
+  setInterval(autoAddMedia, 300000); // every 5 minutes
+
+  fetch("https://ipapi.co/json").then(res => res.json()).then(data => {
+    document.getElementById("country").value = data.country_name || "Canada";
+  });
+</script>
+</body>
+</html>
